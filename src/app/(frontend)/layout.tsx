@@ -16,25 +16,27 @@ export default async function RootLayout({
 	children: React.ReactNode
 }) {
 	return (
-        <GoogleTagManager gtmId="GTM-W2P8M4D9" /> 
-		
-		<Root>
-			<body className="bg-canvas text-ink antialiased">
-				<NuqsAdapter>
-					<SkipToContent />
-					<Announcement />
-					<Header />
-					<main id="main-content" role="main" tabIndex={-1}>
-						{children}
-					</main>
-					<Footer />
+        <>
+            <GoogleTagManager gtmId="GTM-W2P8M4D9" /> 
+            
+            <Root>
+                <body className="bg-canvas text-ink antialiased">
+                    <NuqsAdapter>
+                        <SkipToContent />
+                        <Announcement />
+                        <Header />
+                        <main id="main-content" role="main" tabIndex={-1}>
+                            {children}
+                        </main>
+                        <Footer />
 
-					<VisualEditingControls />
-				</NuqsAdapter>
+                        <VisualEditingControls />
+                    </NuqsAdapter>
 
-				<Analytics />
-				<SpeedInsights />
-			</body>
-		</Root>
+                    <Analytics />
+                    <SpeedInsights />
+                </body>
+            </Root>
+        </>
 	)
 }
