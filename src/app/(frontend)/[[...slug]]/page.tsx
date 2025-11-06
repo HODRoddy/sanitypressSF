@@ -2,119 +2,86 @@ import { notFound } from 'next/navigation'
 import Modules from '@/ui/modules'
 import processMetadata from '@/lib/processMetadata'
 import { client } from '@/sanity/lib/client'
-import { groq } from 'next-sanity'
 import { fetchSanityLive } from '@/sanity/lib/fetch'
+import { groq } from 'next-sanity'
 import {
+	IMAGE_QUERY,
 	MODULES_QUERY,
-	GLOBAL_MODULE_PATH_QUERY,
 	TRANSLATIONS_QUERY,
 } from '@/sanity/lib/queries'
-import { languages } from '@/lib/i18n'
-import errors from '@/lib/errors'
+import { languages, type Lang } from '@/lib/i18n'
 
 export default async function Page({ params }: Props) {
-	const page = await getPage(await params)
-	if (!page) notFound()
-	return <Modules modules={page.modules} page={page} />
+	const post = await getPost(await params)
+	if (!post) notFound()
+	return <Modules modules={post.modules} post={post} />
 }
 
 export async function generateMetadata({ params }: Props) {
-	const page = await getPage(await params)
-	if (!page) notFound()
-	return processMetadata(page)
+	const post = await getPost(await params)
+	if (!post) notFound()
+	return processMetadata(post)
 }
 
-export async function generateStaticParams() {
-  try {
-    const slugs = await client.fetch<{ slug: string }[]>(
-      groq`*[
-        _type == 'page'
-        && defined(metadata.slug.current)
-        && !(metadata.slug.current in ['index'])
-      ]{
-        'slug': metadata.slug.current
-      }`,
-    )
+// NOTE: generateStaticParams has been removed to bypass the build crash
+// caused by missing content during prerendering (related to /about-us).
 
-    // Filter out empty slugs or known problematic pages
-    const safeSlugs = slugs.filter(({ slug }) => {
-      if (!slug || slug.trim() === '') return false
-      // Skip pages that are known to crash the build
-      if (['about-us'].includes(slug)) return false
-      return true
-    })
-
-    return safeSlugs.map(({ slug }) => ({ slug: slug.split('/') }))
-  } catch (error) {
-    console.error('Error generating static params:', error)
-    // Return empty array so build continues even if Sanity query fails
-    return []
-}
-
-async function getPage(params: Params) {
+async function getPost(params: Params) {
 	const { slug, lang } = processSlug(params)
 
-	const page = await fetchSanityLive<Sanity.Page>({
+	return await fetchSanityLive<Sanity.Page & { modules: Sanity.Module[] }>({
 		query: groq`*[
 			_type == 'page'
 			&& metadata.slug.current == $slug
 			${lang ? `&& language == '${lang}'` : ''}
 		][0]{
 			...,
-			'modules': (
-				// global modules (before)
-				*[_type == 'global-module' && path == '*'].before[]{ ${MODULES_QUERY} }
-				// path modules (before)
-				+ *[_type == 'global-module' && path != '*' && ${GLOBAL_MODULE_PATH_QUERY}].before[]{ ${MODULES_QUERY} }
-				// page modules
-				+ modules[]{ ${MODULES_QUERY} }
-				// path modules (after)
-				+ *[_type == 'global-module' && path != '*' && ${GLOBAL_MODULE_PATH_QUERY}].after[]{ ${MODULES_QUERY} }
-				// global modules (after)
-				+ *[_type == 'global-module' && path == '*'].after[]{ ${MODULES_QUERY} }
-			),
+			body[]{
+				...,
+				_type == 'image' => {
+					${IMAGE_QUERY},
+					asset->
+				}
+			},
 			metadata {
 				...,
 				'ogimage': image.asset->url + '?w=1200'
 			},
+			'modules': (
+				// global modules (before)
+				*[_type == 'global-module' && path == '*'].before[]{ ${MODULES_QUERY} }
+				// path modules (before)
+				+ *[_type == 'global-module' && path == '/'].before[]{ ${MODULES_QUERY} }
+				// page modules
+				+ modules[]{ ${MODULES_QUERY} }
+				// path modules (after)
+				+ *[_type == 'global-module' && path == '/'].after[]{ ${MODULES_QUERY} }
+				// global modules (after)
+				+ *[_type == 'global-module' && path == '*'].after[]{ ${MODULES_QUERY} }
+			),
 			${TRANSLATIONS_QUERY},
 		}`,
 		params: { slug },
 	})
-
-	if (slug === 'index' && !page) throw new Error(errors.missingHomepage)
-
-	return page
 }
 
-type Params = { slug?: string[] }
+type Params = { slug: string[] }
 
 type Props = {
 	params: Promise<Params>
 }
 
 function processSlug(params: Params) {
-	const lang =
-		params.slug && languages.includes(params.slug[0])
-			? params.slug[0]
-			: undefined
-
-	if (params.slug === undefined)
-		return {
-			slug: 'index',
-			lang,
-		}
+	const lang = languages.includes(params.slug[0] as Lang)
+		? params.slug[0]
+		: undefined
 
 	const slug = params.slug.join('/')
 
-	if (lang) {
-		const processed = slug.replace(new RegExp(`^${lang}/?`), '')
-
-		return {
-			slug: processed === '' ? 'index' : processed,
-			lang,
-		}
+	return {
+		slug: lang ? slug.replace(new RegExp(`^${lang}/`), '') : slug,
+		lang,
 	}
+}
 
-	return { slug }
 }
