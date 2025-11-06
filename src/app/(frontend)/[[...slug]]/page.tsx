@@ -25,21 +25,6 @@ export async function generateMetadata({ params }: Props) {
 	if (!page) notFound()
 	return processMetadata(page)
 }
-
-export async function generateStaticParams() {
-	const slugs = await client.fetch<{ slug: string }[]>(
-		groq`*[
-			_type == 'page'
-			&& defined(metadata.slug.current)
-			&& !(metadata.slug.current in ['index'])
-		]{
-			'slug': metadata.slug.current
-		}`,
-	)
-
-	return slugs.map(({ slug }) => ({ slug: slug.split('/') }))
-}
-
 async function getPage(params: Params) {
 	const { slug, lang } = processSlug(params)
 
