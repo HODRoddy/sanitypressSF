@@ -1,4 +1,5 @@
-// import { GoogleTagManager } from '@next/third-parties/google'
+import { GoogleTagManager } from '@next/third-parties/google'
+import Root from '@/ui/Root'
 import Root from '@/ui/Root'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import SkipToContent from '@/ui/SkipToContent'
@@ -17,7 +18,7 @@ export default async function RootLayout({
 }) {
 	return (
 		<Root>
-			{/* <GoogleTagManager gtmId="" /> */}
+			{/* <GoogleTagManager gtmId="GTM-W2P8M4D9" /> */}
 			<body className="bg-canvas text-ink antialiased">
 				<NuqsAdapter>
 					<SkipToContent />
