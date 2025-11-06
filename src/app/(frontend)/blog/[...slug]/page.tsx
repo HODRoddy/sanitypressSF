@@ -25,13 +25,15 @@ export async function generateMetadata({ params }: Props) {
 	return processMetadata(post)
 }
 
-export async function generateStaticParams() {
-	const slugs = await client.fetch<string[]>(
-		groq`*[_type == 'blog.post' && defined(metadata.slug.current)].metadata.slug.current`,
-	)
-
-	return slugs.map((slug) => ({ slug: slug.split('/') }))
-}
+// NOTE: The original generateStaticParams function has been removed
+// to bypass the Next.js build crash caused by missing Sanity content.
+// export async function generateStaticParams() {
+// 	const slugs = await client.fetch<string[]>(
+// 		groq`*[_type == 'blog.post' && defined(metadata.slug.current)].metadata.slug.current`,
+// 	)
+//
+// 	return slugs.map((slug) => ({ slug: slug.split('/') }))
+// }
 
 async function getPost(params: Params) {
 	const blogTemplateExists = await fetchSanityLive<boolean>({
