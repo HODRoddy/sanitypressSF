@@ -1,4 +1,4 @@
-import { GoogleTagManager } from '@next/third-parties/google'
+// import { GoogleTagManager } from '@next/third-parties/google'
 import Root from '@/ui/Root'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import SkipToContent from '@/ui/SkipToContent'
@@ -16,27 +16,24 @@ export default async function RootLayout({
 	children: React.ReactNode
 }) {
 	return (
-        <>
-            <GoogleTagManager gtmId="GTM-W2P8M4D9" /> 
-            
-            <Root>
-                <body className="bg-canvas text-ink antialiased">
-                    <NuqsAdapter>
-                        <SkipToContent />
-                        <Announcement />
-                        <Header />
-                        <main id="main-content" role="main" tabIndex={-1}>
-                            {children}
-                        </main>
-                        <Footer />
+		<Root>
+			{/* <GoogleTagManager gtmId="" /> */}
+			<body className="bg-canvas text-ink antialiased">
+				<NuqsAdapter>
+					<SkipToContent />
+					<Announcement />
+					<Header />
+					<main id="main-content" role="main" tabIndex={-1}>
+						{children}
+					</main>
+					<Footer />
 
-                        <VisualEditingControls />
-                    </NuqsAdapter>
+					<VisualEditingControls />
+				</NuqsAdapter>
 
-                    <Analytics />
-                    <SpeedInsights />
-                </body>
-            </Root>
-        </>
+				<Analytics />
+				<SpeedInsights />
+			</body>
+		</Root>
 	)
 }

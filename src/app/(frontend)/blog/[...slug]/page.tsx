@@ -25,6 +25,14 @@ export async function generateMetadata({ params }: Props) {
 	return processMetadata(post)
 }
 
+export async function generateStaticParams() {
+	const slugs = await client.fetch<string[]>(
+		groq`*[_type == 'blog.post' && defined(metadata.slug.current)].metadata.slug.current`,
+	)
+
+	return slugs.map((slug) => ({ slug: slug.split('/') }))
+}
+
 async function getPost(params: Params) {
 	const blogTemplateExists = await fetchSanityLive<boolean>({
 		query: groq`count(*[_type == 'global-module' && path == '${BLOG_DIR}/']) > 0`,
