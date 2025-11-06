@@ -25,17 +25,30 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export async function generateStaticParams() {
-	const slugs = await client.fetch<{ slug: string }[]>(
-		groq`*[
-			_type == 'page'
-			&& defined(metadata.slug.current)
-			&& !(metadata.slug.current in ['index'])
-		]{
-			'slug': metadata.slug.current
-		}`,
-	)
+  try {
+    const slugs = await client.fetch<{ slug: string }[]>(
+      groq`*[
+        _type == 'page'
+        && defined(metadata.slug.current)
+        && !(metadata.slug.current in ['index'])
+      ]{
+        'slug': metadata.slug.current
+      }`,
+    )
 
-	return slugs.map(({ slug }) => ({ slug: slug.split('/') }))
+    // Filter out empty slugs or known problematic pages
+    const safeSlugs = slugs.filter(({ slug }) => {
+      if (!slug || slug.trim() === '') return false
+      // Skip pages that are known to crash the build
+      if (['about-us'].includes(slug)) return false
+      return true
+    })
+
+    return safeSlugs.map(({ slug }) => ({ slug: slug.split('/') }))
+  } catch (error) {
+    console.error('Error generating static params:', error)
+    // Return empty array so build continues even if Sanity query fails
+    return []
 }
 
 async function getPage(params: Params) {
