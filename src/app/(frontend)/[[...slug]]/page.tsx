@@ -23,9 +23,6 @@ export async function generateMetadata({ params }: Props) {
 	return processMetadata(post)
 }
 
-// NOTE: generateStaticParams has been removed to bypass the build crash
-// caused by missing content during prerendering (related to /about-us).
-
 async function getPost(params: Params) {
 	const { slug, lang } = processSlug(params)
 
@@ -82,6 +79,4 @@ function processSlug(params: Params) {
 		slug: lang ? slug.replace(new RegExp(`^${lang}/`), '') : slug,
 		lang,
 	}
-}
-
 }
